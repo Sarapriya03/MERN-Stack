@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 const TodoModel = require("./models/todoList");
 
 const app = express();
@@ -13,7 +12,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:3000",          
-    "https://todo-list-fe-p3q9.onrender.com"
+    "https://todo-list-fe-p3q9.onrender.com"   // your frontend
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
@@ -31,9 +30,7 @@ mongoose.connect(MONGODB_URI, {
 
 
 // ----------------- API Routes -----------------
-
-// Get all todos
-app.get("/getTodoList", async (req, res) => {
+app.get("/api/todos", async (req, res) => {
   try {
     const todoList = await TodoModel.find({});
     res.json(todoList);
@@ -42,8 +39,7 @@ app.get("/getTodoList", async (req, res) => {
   }
 });
 
-// Add a new todo
-app.post("/addTodoList", async (req, res) => {
+app.post("/api/todos", async (req, res) => {
   try {
     console.log("📥 Received payload:", req.body);
     const newTodo = await TodoModel.create(req.body);
@@ -54,9 +50,7 @@ app.post("/addTodoList", async (req, res) => {
   }
 });
 
-
-// Update a todo
-app.put("/updateTodoList/:id", async (req, res) => {
+app.put("/api/todos/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = {
@@ -72,8 +66,7 @@ app.put("/updateTodoList/:id", async (req, res) => {
   }
 });
 
-// Delete a todo
-app.delete("/deleteTodoList/:id", async (req, res) => {
+app.delete("/api/todos/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const deletedTodo = await TodoModel.findByIdAndDelete(id);
@@ -84,12 +77,9 @@ app.delete("/deleteTodoList/:id", async (req, res) => {
 });
 
 
-// ----------------- Serve React build -----------------
-const clientBuildPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(clientBuildPath));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(clientBuildPath, "index.html"));
+// ✅ Health check (for Render)
+app.get("/", (req, res) => {
+  res.send("✅ Todo API is running...");
 });
 
 
