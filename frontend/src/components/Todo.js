@@ -49,13 +49,17 @@ function Todo() {
       return;
     }
 
+    const payload = {
+    task: newTask,
+    status: newStatus,
+    deadline: false,
+  };
+  console.log("🚀 Sending payload:", payload);
+
     axios
-      .post("/addTodoList", {
-        task: newTask,
-        status: newStatus,
-        deadline: new Date(newDeadline),
-      })
+      .post("/addTodoList", payload)
       .then((response) => {
+        console.log("✅ Server response:", response.data);
         setTodoList([...todoList, response.data]);
         setNewTask("");
         setNewStatus("");

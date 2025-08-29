@@ -45,11 +45,13 @@ app.get("/getTodoList", async (req, res) => {
 // Add a new todo
 app.post("/addTodoList", async (req, res) => {
   try {
+    console.log("📥 Received payload:", req.body); 
     const newTodo = await TodoModel.create({
       task: req.body.task,
       status: req.body.status,
-      deadline: req.body.deadline,
+      deadline: req.body.deadline || false,
     });
+    console.log("✅ Saved todo:", newTodo);
     res.json(newTodo);
   } catch (err) {
     res.status(500).json({ error: err.message });
