@@ -2,7 +2,8 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 
 // Set axios base URL to match your Azure backend URL
-axios.defaults.baseURL = "https://todo-list-nvlw.onrender.com";
+axios.defaults.baseURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 
 function Todo() {
   const [todoList, setTodoList] = useState([]);
