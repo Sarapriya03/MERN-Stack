@@ -1,18 +1,9 @@
 const mongoose = require("mongoose");
 
-const todoSchema = new mongoose.Schema({
-  task: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    required: true,
-  },
-  deadline: {
-    type: Date,
-    required: true,
-  },
+const TodoSchema = new mongoose.Schema({
+  task: { type: String, required: true },       // matches frontend "Task"
+  status: { type: String, required: true },     // matches frontend "Status"
+  deadline: { type: Date, required: true }      // matches frontend "Deadline"
 });
 
-module.exports = mongoose.model("Todo", todoSchema);
+module.exports = mongoose.model("Todo", TodoSchema);
