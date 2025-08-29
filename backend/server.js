@@ -7,10 +7,19 @@ const TodoModel = require("./models/todoList");
 const app = express();
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
-// ✅ MongoDB connection (use env var in Azure)
+// ✅ CORS setup (allow local + Render frontend)
+app.use(cors({
+  origin: [
+    "http://localhost:3000",          // local React dev
+    "https://todo-list-fe-p3q9.onrender.com" // your Render frontend URL
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+// ✅ MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/todo";
 
 mongoose.connect(MONGODB_URI, {
@@ -20,7 +29,8 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log("✅ MongoDB connected successfully..."))
 .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ✅ API routes
+
+// ----------------- API Routes -----------------
 
 // Get all todos
 app.get("/getTodoList", async (req, res) => {
@@ -36,9 +46,9 @@ app.get("/getTodoList", async (req, res) => {
 app.post("/addTodoList", async (req, res) => {
   try {
     const newTodo = await TodoModel.create({
-      title: req.body.title,
-      description: req.body.description,
-      completed: req.body.completed || false,
+      task: req.body.task,
+      status: req.body.status,
+      deadline: req.body.deadline,
     });
     res.json(newTodo);
   } catch (err) {
@@ -51,9 +61,9 @@ app.put("/updateTodoList/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = {
-      title: req.body.title,
-      description: req.body.description,
-      completed: req.body.completed,
+      task: req.body.task,
+      status: req.body.status,
+      deadline: req.body.deadline,
     };
     const updatedTodo = await TodoModel.findByIdAndUpdate(id, updateData, { new: true });
     res.json(updatedTodo);
@@ -73,16 +83,17 @@ app.delete("/deleteTodoList/:id", async (req, res) => {
   }
 });
 
-// ✅ Serve React frontend (after build)
+
+// ----------------- Serve React build (optional if backend only) -----------------
 const clientBuildPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(clientBuildPath));
 
-// Fallback route: send React index.html
 app.get("*", (req, res) => {
   res.sendFile(path.join(clientBuildPath, "index.html"));
 });
 
-// ✅ Start server (Azure provides PORT)
+
+// ✅ Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
