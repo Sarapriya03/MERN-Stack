@@ -1,15 +1,16 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 
-// Set axios base URL to match your Azure backend URL
-axios.defaults.baseURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
+// Set axios base URL to match your backend URL
+axios.defaults.baseURL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 function Todo() {
   const [todoList, setTodoList] = useState([]);
   const [editableId, setEditableId] = useState(null);
-  const [editedTask, setEditedTask] = useState("");
-  const [editedStatus, setEditedStatus] = useState("");
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
+  const [editedCompleted, setEditedCompleted] = useState(false);
   const [editedDeadline, setEditedDeadline] = useState("");
   const [newTask, setNewTask] = useState("");
   const [newStatus, setNewStatus] = useState("");
@@ -28,15 +29,19 @@ function Todo() {
     const rowData = todoList.find((data) => data._id === id);
     if (rowData) {
       setEditableId(id);
-      setEditedTask(rowData.task);
-      setEditedStatus(rowData.status);
+      setEditedTitle(rowData.title);
+      setEditedDescription(rowData.description);
+      setEditedCompleted(rowData.completed);
       setEditedDeadline(
-        rowData.deadline ? new Date(rowData.deadline).toISOString().slice(0, 16) : ""
+        rowData.deadline
+          ? new Date(rowData.deadline).toISOString().slice(0, 16)
+          : ""
       );
     } else {
       setEditableId(null);
-      setEditedTask("");
-      setEditedStatus("");
+      setEditedTitle("");
+      setEditedDescription("");
+      setEditedCompleted(false);
       setEditedDeadline("");
     }
   };
@@ -50,11 +55,12 @@ function Todo() {
     }
 
     const payload = {
-    task: newTask,
-    status: newStatus,
-    deadline: false,
-  };
-  console.log("🚀 Sending payload:", payload);
+      title: newTask,
+      description: newStatus,
+      completed: newStatus === "Completed",
+      deadline: newDeadline,
+    };
+    console.log("🚀 Sending payload:", payload);
 
     axios
       .post("/addTodoList", payload)
@@ -65,19 +71,20 @@ function Todo() {
         setNewStatus("");
         setNewDeadline("");
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error("❌ Add Task error:", err));
   };
 
   // Save edited task
   const saveEditedTask = (id) => {
-    if (!editedTask || !editedStatus || !editedDeadline) {
+    if (!editedTitle || !editedDescription || !editedDeadline) {
       alert("All fields must be filled out.");
       return;
     }
 
     const editedData = {
-      task: editedTask,
-      status: editedStatus,
+      title: editedTitle,
+      description: editedDescription,
+      completed: editedCompleted,
       deadline: new Date(editedDeadline),
     };
 
@@ -89,8 +96,9 @@ function Todo() {
         );
         setTodoList(updatedTodos);
         setEditableId(null);
-        setEditedTask("");
-        setEditedStatus("");
+        setEditedTitle("");
+        setEditedDescription("");
+        setEditedCompleted(false);
         setEditedDeadline("");
       })
       .catch((err) => console.log(err));
@@ -118,7 +126,8 @@ function Todo() {
               <thead className="table-primary">
                 <tr>
                   <th>Task</th>
-                  <th>Status</th>
+                  <th>Description</th>
+                  <th>Completed</th>
                   <th>Deadline</th>
                   <th>Actions</th>
                 </tr>
@@ -132,11 +141,11 @@ function Todo() {
                           <input
                             type="text"
                             className="form-control"
-                            value={editedTask}
-                            onChange={(e) => setEditedTask(e.target.value)}
+                            value={editedTitle}
+                            onChange={(e) => setEditedTitle(e.target.value)}
                           />
                         ) : (
-                          data.task
+                          data.title
                         )}
                       </td>
                       <td>
@@ -144,11 +153,31 @@ function Todo() {
                           <input
                             type="text"
                             className="form-control"
-                            value={editedStatus}
-                            onChange={(e) => setEditedStatus(e.target.value)}
+                            value={editedDescription}
+                            onChange={(e) =>
+                              setEditedDescription(e.target.value)
+                            }
                           />
                         ) : (
-                          data.status
+                          data.description
+                        )}
+                      </td>
+                      <td>
+                        {editableId === data._id ? (
+                          <select
+                            className="form-control"
+                            value={editedCompleted ? "Completed" : "Pending"}
+                            onChange={(e) =>
+                              setEditedCompleted(e.target.value === "Completed")
+                            }
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                          </select>
+                        ) : data.completed ? (
+                          "Completed"
+                        ) : (
+                          "Pending"
                         )}
                       </td>
                       <td>
@@ -157,7 +186,9 @@ function Todo() {
                             type="datetime-local"
                             className="form-control"
                             value={editedDeadline}
-                            onChange={(e) => setEditedDeadline(e.target.value)}
+                            onChange={(e) =>
+                              setEditedDeadline(e.target.value)
+                            }
                           />
                         ) : data.deadline ? (
                           new Date(data.deadline).toLocaleString()
@@ -192,7 +223,7 @@ function Todo() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="text-center">
+                    <td colSpan="5" className="text-center">
                       No tasks found
                     </td>
                   </tr>
@@ -217,14 +248,25 @@ function Todo() {
               />
             </div>
             <div className="mb-3">
-              <label>Status</label>
+              <label>Description</label>
               <input
                 className="form-control"
                 type="text"
-                placeholder="Enter Status"
+                placeholder="Enter Description"
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
               />
+            </div>
+            <div className="mb-3">
+              <label>Status</label>
+              <select
+                className="form-control"
+                value={newStatus === "Completed" ? "Completed" : "Pending"}
+                onChange={(e) => setNewStatus(e.target.value)}
+              >
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+              </select>
             </div>
             <div className="mb-3">
               <label>Deadline</label>

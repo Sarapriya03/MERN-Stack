@@ -12,8 +12,8 @@ app.use(express.json());
 // ✅ CORS setup (allow local + Render frontend)
 app.use(cors({
   origin: [
-    "http://localhost:3000",          // local React dev
-    "https://todo-list-fe-p3q9.onrender.com" // your Render frontend URL
+    "http://localhost:3000",          
+    "https://todo-list-fe-p3q9.onrender.com"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
@@ -46,11 +46,15 @@ app.get("/getTodoList", async (req, res) => {
 app.post("/addTodoList", async (req, res) => {
   try {
     console.log("📥 Received payload:", req.body); 
+    
+    // 🔥 Map frontend fields (title, description, completed) to DB fields
     const newTodo = await TodoModel.create({
-      task: req.body.task,
-      status: req.body.status,
-      deadline: req.body.deadline || false,
+      task: req.body.title || req.body.task,
+      status: req.body.description || req.body.status,
+      completed: req.body.completed || false,
+      deadline: req.body.deadline || null,
     });
+
     console.log("✅ Saved todo:", newTodo);
     res.json(newTodo);
   } catch (err) {
@@ -63,8 +67,9 @@ app.put("/updateTodoList/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = {
-      task: req.body.task,
-      status: req.body.status,
+      task: req.body.title || req.body.task,
+      status: req.body.description || req.body.status,
+      completed: req.body.completed || false,
       deadline: req.body.deadline,
     };
     const updatedTodo = await TodoModel.findByIdAndUpdate(id, updateData, { new: true });
@@ -86,7 +91,7 @@ app.delete("/deleteTodoList/:id", async (req, res) => {
 });
 
 
-// ----------------- Serve React build (optional if backend only) -----------------
+// ----------------- Serve React build -----------------
 const clientBuildPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(clientBuildPath));
 
