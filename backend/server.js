@@ -45,22 +45,15 @@ app.get("/getTodoList", async (req, res) => {
 // Add a new todo
 app.post("/addTodoList", async (req, res) => {
   try {
-    console.log("📥 Received payload:", req.body); 
-    
-    // 🔥 Map frontend fields (title, description, completed) to DB fields
-    const newTodo = await TodoModel.create({
-      task: req.body.title || req.body.task,
-      status: req.body.description || req.body.status,
-      completed: req.body.completed || false,
-      deadline: req.body.deadline || null,
-    });
-
-    console.log("✅ Saved todo:", newTodo);
+    console.log("📥 Received payload:", req.body);
+    const newTodo = await TodoModel.create(req.body);
     res.json(newTodo);
   } catch (err) {
+    console.error("❌ Error while saving todo:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Update a todo
 app.put("/updateTodoList/:id", async (req, res) => {
